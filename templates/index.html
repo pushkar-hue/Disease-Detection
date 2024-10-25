@@ -1,0 +1,98 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuberculosis Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .upload-container {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        #result-container {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        #preview-image {
+            max-width: 400px;
+            margin: 20px 0;
+        }
+        .positive {
+            background-color: #ffebee;
+            border: 1px solid #ef9a9a;
+        }
+        .negative {
+            background-color: #e8f5e9;
+            border: 1px solid #a5d6a7;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tuberculosis Detection System</h1>
+    
+    <div class="upload-container">
+        <h2>Upload Chest X-Ray Image</h2>
+        <input type="file" id="image-input" accept=".jpg,.jpeg,.png">
+        <p>Supported formats: JPG, JPEG, PNG</p>
+    </div>
+
+    <div id="result-container">
+        <h3>Result</h3>
+        <img id="preview-image" src="" alt="Uploaded image">
+        <p id="result-text"></p>
+        <p id="confidence-text"></p>
+    </div>
+
+    <script>
+        document.getElementById('image-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const resultContainer = document.getElementById('result-container');
+                    const resultText = document.getElementById('result-text');
+                    const confidenceText = document.getElementById('confidence-text');
+                    const previewImage = document.getElementById('preview-image');
+
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    // Display results
+                    resultContainer.style.display = 'block';
+                    resultText.textContent = data.result;
+                    confidenceText.textContent = `Confidence: ${data.confidence}`;
+                    previewImage.src = data.image_path;
+
+                    // Style based on result
+                    resultContainer.className = data.result.includes('Detected') ? 'positive' : 'negative';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while processing the image.');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
